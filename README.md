@@ -9,3 +9,22 @@ Que incluye el proyecto:
 8. Middlewares
 9. Cerrar sesión
 10. Refresh Token
+
+El .env debe llevar:
+APP_PORT=
+NODE_ENV= desarrollo o produccion
+FRONTEND_URL=  
+BACKEND_URL=
+
+#Database Configuration
+HOST=
+USER=
+PASSWORD=
+DB=
+PORT=
+
+#JWT CONFIGURATION
+SECRET_JWT_KEY=
+#STMP CONFIGURATION
+EMAIL_PASSWORD=
+EMAIL_USER=
