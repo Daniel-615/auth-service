@@ -30,7 +30,7 @@ module.exports = (sequelize) => {
       sequelize,
       modelName: 'rol_permiso',
       tableName: 'rol_permiso',
-      timestamps: false
+      timestamps: true
     }
   );
 

@@ -347,5 +347,20 @@ class UsuarioController {
       });
     }
   }
+  //OAUTH2
+  async googleCallBackHandler(req,res){
+    try{
+      const usuario=req.user;
+      await generarTokensYEnviar(usuario,res);
+      return res.send({
+        message: "Inicio de sesión exitoso con Google.",
+      }) //esto cambiarlo por el redireccionamiento al frontend luego.
+    } catch(err){
+      console.error(`Error en el callback de Google: ${err.message}`);
+      return res.status(500).send({
+        message: "Error al iniciar sesión con Google."
+      });
+    }
+  }
 }
 module.exports = UsuarioController;

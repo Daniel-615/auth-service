@@ -31,7 +31,7 @@ module.exports = (sequelize) => {
       sequelize,
       modelName: 'usuario_rol',
       tableName: 'usuario_rol',
-      timestamps: false
+      timestamps: true
     }
   );
 

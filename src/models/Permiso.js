@@ -24,7 +24,7 @@ module.exports = (sequelize) => {
       sequelize,
       modelName: 'permiso',
       tableName: 'permisos',
-      timestamps: false
+      timestamps: true
     }
   );
 

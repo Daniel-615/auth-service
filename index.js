@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const { APP_PORT,FRONTEND_URL } = require('./src/config/config.js')
 const db = require('./src/models'); 
 const cookieParser = require('cookie-parser');
+const passport = require('./src/middleware/oauth2.js'); 
 const UsuarioRoutes = require('./src/routes/usuario.route.js');
 class Server {
   constructor() {
@@ -11,6 +12,7 @@ class Server {
     this.port = APP_PORT;
     this.app.use(cookieParser()); // Middleware para manejar cookies
     this.app.use(express.json()); // Middleware para parsear JSON
+    this.app.use(passport.initialize());
     this.configureMiddlewares();
     this.configureRoutes();
     this.connectDatabase();
