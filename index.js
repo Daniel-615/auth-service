@@ -8,6 +8,8 @@ const passport = require('./src/middleware/oauth2.js');
 const UsuarioRoutes = require('./src/routes/usuario.route.js');
 const RolRoutes = require('./src/routes/rol.route.js');
 const PermisoRoutes = require('./src/routes/permiso.route.js'); 
+const RolPermisoRoutes=require('./src/routes/rol.permiso.route.js')
+const UsuarioRolRoutes = require('./src/routes/usuario.rol.route.js');
 class Server {
   constructor() {
     this.app = express();
@@ -33,6 +35,8 @@ class Server {
     new UsuarioRoutes(this.app); // Instancia las rutas de Usuario
     new RolRoutes(this.app); // Instancia las rutas de Rol
     new PermisoRoutes(this.app); // Instancia las rutas de Permiso
+    new RolPermisoRoutes(this.app); // Instancia las rutas de Rol-Permiso
+    new UsuarioRolRoutes(this.app); // Instancia las rutas de Usuario-Rol
   }
 
   async connectDatabase() {
