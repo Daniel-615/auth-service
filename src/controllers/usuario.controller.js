@@ -40,15 +40,16 @@ class UsuarioController {
       nuevoUsuario.Password = password; 
       nuevoUsuario.Status = status ?? true;
 
-      await generarTokensYEnviar(nuevoUsuario, res);
-
-
       await nuevoUsuario.save();
-       // Asignar rol de CLIENTE (rolId: 2)
+      // Asignar rol de CLIENTE (rolId: 2)
       await UsuarioRol.create({
         usuarioId: nuevoUsuario.id,
         rolId: 2
       });
+      const roles = await nuevoUsuario.getRols(); 
+      const rolesNombre = roles.map(r => r.nombre);
+
+      await generarTokensYEnviar(nuevoUsuario, res,rolesNombre);
       res
         .status(201)
         .send({
@@ -165,8 +166,10 @@ class UsuarioController {
       if (!isValid) {
         return res.status(401).send({ message: "Contraseña incorrecta." });
       }
-      //Llama a la función para generar y enviar los tokens
-      await generarTokensYEnviar(usuario, res);
+      const roles = await usuario.getRols(); 
+      const rolesNombre = roles.map(r => r.nombre);
+
+      await generarTokensYEnviar(usuario, res,rolesNombre);
 
       await usuario.save();
 
@@ -356,7 +359,9 @@ class UsuarioController {
   async googleCallBackHandler(req,res){
     try{
       const usuario=req.user;
-      await generarTokensYEnviar(usuario,res);
+      const roles = await usuario.getRols();
+      const rolesNombre = roles.map(r => r.nombre); 
+      await generarTokensYEnviar(usuario,res,rolesNombre);
       return res.send({
         message: "Inicio de sesión exitoso con Google.",
       }) //esto cambiarlo por el redireccionamiento al frontend luego.

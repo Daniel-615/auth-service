@@ -46,11 +46,11 @@ class Database {
     const { Usuario, Rol, Permiso, UsuarioRol, RolPermiso } = this.models;
 
     // Relaciones Usuario <-> Rol
-    Usuario.belongsToMany(Rol, { through: UsuarioRol, foreignKey: 'usuarioId' });
+    Usuario.belongsToMany(Rol, { through: UsuarioRol, foreignKey: 'usuarioId', as: 'Rols'});
     Rol.belongsToMany(Usuario, { through: UsuarioRol, foreignKey: 'rolId' });
 
     // Relaciones Rol <-> Permiso
-    Rol.belongsToMany(Permiso, { through: RolPermiso, foreignKey: 'rolId' });
+    Rol.belongsToMany(Permiso, { through: RolPermiso, foreignKey: 'rolId', as: 'Permisos' });
     Permiso.belongsToMany(Rol, { through: RolPermiso, foreignKey: 'permisoId' });
   }
 

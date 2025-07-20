@@ -2,7 +2,7 @@ const express = require("express");
 const UsuarioController = require("../controllers/usuario.controller.js");
 const verifyToken = require('../middleware/auth.js');
 const passport = require('../middleware/oauth2.js'); 
-
+const { checkPermisosDesdeRoles } = require('../middleware/checkRole.js');
 class UsuarioRoutes {
   constructor(app) {
     this.router = express.Router();
@@ -88,7 +88,8 @@ class UsuarioRoutes {
       this.controller.findOne(req, res);
     });
 
-    this.router.get("/findAll", verifyToken, (req, res) => {
+    
+    this.router.get("/findAll", verifyToken, checkPermisosDesdeRoles(["ver_usuarios"]),(req, res) => {
       this.controller.findAll(req, res);
     });
 

@@ -1,14 +1,14 @@
 const jwt = require("jsonwebtoken");
 const { SECRET_JWT_KEY,NODE_ENV} = require("../config/config.js");
-function generarTokensYEnviar(usuario, res) {
+function generarTokensYEnviar(usuario, res,rolesNombre) {
   const accessToken = jwt.sign(
-    { id: usuario.id, email: usuario.email },
+    { id: usuario.id, email: usuario.email, rol: rolesNombre},
     SECRET_JWT_KEY,
     { expiresIn: "1h" }
   );
 
   const refreshToken = jwt.sign(
-    { id: usuario.id, email: usuario.email },
+    { id: usuario.id, email: usuario.email, rol: rolesNombre},
     SECRET_JWT_KEY,
     { expiresIn: "7d" }
   );
