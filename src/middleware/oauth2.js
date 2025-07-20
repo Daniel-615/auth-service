@@ -4,6 +4,7 @@ const { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, BACKEND_URL } = require("../conf
 const db = require("../models");
 const Usuario = db.getModel("Usuario");
 const bcrypt = require("bcrypt");
+const UsuarioRol = db.getModel("UsuarioRol");
 passport.use(
   new GoogleStrategy({
       clientID: OAUTH2_CLIENT_ID,
@@ -24,6 +25,17 @@ passport.use(
                 password: hashedDummyPassword,
                 status: true
             });
+        }
+        //Asignar rol de CLIENTE (rolId: 2) si no existe
+        const rolExistente = await UsuarioRol.findOne({
+          where: { usuarioId: user.id, rolId: 2 }
+        });
+
+        if (!rolExistente) {
+          await UsuarioRol.create({
+            usuarioId: user.id,
+            rolId: 2
+          });
         }
 
         return done(null, user);

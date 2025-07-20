@@ -7,6 +7,8 @@ const { generarTokensYEnviar } = require("../middleware/sendTokens.js");
 const { SECRET_JWT_KEY,NODE_ENV} = require("../config/config.js");
 const validation_user= require("../middleware/validationUser.js");
 const { enviarCorreoRecuperacion } = require("../middleware/mailer.js");
+const UsuarioRol = db.getModel("UsuarioRol");
+
 class UsuarioController {
   
   async create(req, res) {
@@ -38,13 +40,17 @@ class UsuarioController {
       nuevoUsuario.Password = password; 
       nuevoUsuario.Status = status ?? true;
 
-      await generarTokensYEnviar(usuario, res);
+      await generarTokensYEnviar(nuevoUsuario, res);
 
 
       await nuevoUsuario.save();
-
+       // Asignar rol de CLIENTE (rolId: 2)
+      await UsuarioRol.create({
+        usuarioId: nuevoUsuario.id,
+        rolId: 2
+      });
       res
-        status(201)
+        .status(201)
         .send({
           message: "Usuario registrado exitosamente.",
           id: nuevoUsuario.id,
@@ -67,7 +73,6 @@ class UsuarioController {
     try {
       const usuarios = await Usuario.findAll({ where: condition });
 
-      // Aplicamos getters si quieres enviar un formato más presentable
       const usuariosConFullName = usuarios.map(u => ({
         id: u.id,
         fullName: u.FullName,
