@@ -3,6 +3,7 @@ const UsuarioController = require("../controllers/usuario.controller.js");
 const verifyToken = require('../middleware/auth.js');
 const passport = require('../middleware/oauth2.js'); 
 const { checkPermisosDesdeRoles } = require('../middleware/checkRole.js');
+
 class UsuarioRoutes {
   constructor(app) {
     this.router = express.Router();
@@ -42,8 +43,16 @@ class UsuarioRoutes {
         res.status(500).send({ message: "Error al registrar el usuario" });
       }
     });
-
-    this.router.post("/logout", (req, res) => {
+    // Ruta protegida para que el admin registre usuarios con rol empleado
+    this.router.post(
+      "/register-admin",
+      verifyToken,
+      checkPermisosDesdeRoles(["asignar_roles"]),
+      (req, res) => {
+        this.controller.create(req, res);
+      }
+    );
+    this.router.post("/logout", verifyToken, checkPermisosDesdeRoles(["logout_usuario"]),(req, res) => {
       try {
         this.controller.logout(req, res);
       } catch (err) {
@@ -76,28 +85,28 @@ class UsuarioRoutes {
     });
 
     // Rutas de usuario protegidas
-    this.router.put("/:id", verifyToken, (req, res) => {
+
+    this.router.put("/:id", verifyToken,checkPermisosDesdeRoles(["actualizar_usuario"]), (req, res) => {
       this.controller.update(req, res);
     });
 
-    this.router.post("/deactivateAccount/:id", verifyToken, (req, res) => {
+    this.router.post("/deactivateAccount/:id", verifyToken, checkPermisosDesdeRoles(["desactivar_cuenta"]),(req, res) => {
       this.controller.deactivateAccount(req, res);
     });
 
-    this.router.get("/findOne/:id", verifyToken, (req, res) => {
+    this.router.get("/findOne/:id", verifyToken, checkPermisosDesdeRoles(["ver_usuario"]),(req, res) => {
       this.controller.findOne(req, res);
     });
 
-    
     this.router.get("/findAll", verifyToken, checkPermisosDesdeRoles(["ver_usuarios"]),(req, res) => {
       this.controller.findAll(req, res);
     });
 
-    this.router.get("/findAllActivos", verifyToken, (req, res) => {
+    this.router.get("/findAllActivos", verifyToken,checkPermisosDesdeRoles(["ver_usuarios_activos"]), (req, res) => {
       this.controller.findAllActivos(req, res);
     });
 
-    this.router.delete("/:id", verifyToken, (req, res) => {
+    this.router.delete("/:id", verifyToken,checkPermisosDesdeRoles(["eliminar_usuario"]), (req, res) => {
       this.controller.delete(req, res);
     });
 
