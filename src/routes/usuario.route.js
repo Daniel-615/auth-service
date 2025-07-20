@@ -76,7 +76,7 @@ class UsuarioRoutes {
     });
 
     // Rutas de usuario protegidas
-    this.router.put("/update/:id", verifyToken, (req, res) => {
+    this.router.put("/:id", verifyToken, (req, res) => {
       this.controller.update(req, res);
     });
 
@@ -96,7 +96,7 @@ class UsuarioRoutes {
       this.controller.findAllActivos(req, res);
     });
 
-    this.router.delete("/delete/:id", verifyToken, (req, res) => {
+    this.router.delete("/:id", verifyToken, (req, res) => {
       this.controller.delete(req, res);
     });
 
