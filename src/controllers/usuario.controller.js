@@ -12,59 +12,90 @@ const UsuarioRol = db.getModel("UsuarioRol");
 class UsuarioController {
   
   async create(req, res) {
-    const { nombre, apellido, email, password, status } = req.body;
+    const { nombre, apellido, email, password, status, rolId } = req.body;
 
     if (!nombre || !email || !password) {
       return res.status(400).send({ message: "Faltan campos obligatorios." });
     }
+
     try {
       // Validaciones
       validation_user.userName(nombre);
       validation_user.email(email);
       validation_user.password(password);
-      // Verifica que el email no esté ya registrado
-      const existingUsername= await Usuario.findOne({ where: { nombre,apellido } });
+
+      // Verificar duplicados
+      const existingUsername = await Usuario.findOne({ where: { nombre, apellido } });
       if (existingUsername) {
         return res.status(400).send({ message: "El nombre de usuario ya está en uso." });
       }
+
       const existingUserEmail = await Usuario.findOne({ where: { email } });
       if (existingUserEmail) {
         return res.status(400).send({ message: "El correo ya está registrado." });
       }
 
+      // Crear usuario
       const nuevoUsuario = Usuario.build(); 
-
       nuevoUsuario.Nombre = nombre;
       nuevoUsuario.Apellido = apellido;
       nuevoUsuario.Email = email;
-      nuevoUsuario.Password = password; 
+      nuevoUsuario.Password = password;
       nuevoUsuario.Status = status ?? true;
 
+      
+      let rolAsignado = 2;
+      
+      if (req.user && req.user.id) {
+        // Usuario autenticado: debe proporcionar rolId
+        if (!rolId) {
+          return res.status(400).send({
+            message: "El campo 'rolId' es obligatorio al registrar usuarios autenticado."
+          });
+        }
+        
+        if (rolId !== 1) {
+          return res.status(400).send({
+            message: "Solo se permite asignar el rol de empleado"
+          });
+        }
+        
+        rolAsignado = rolId;
+      }
+      //Pasa por todos los filtros de validación si estos se cumplen crea el usuario
       await nuevoUsuario.save();
-      // Asignar rol de CLIENTE (rolId: 2)
+      
       await UsuarioRol.create({
         usuarioId: nuevoUsuario.id,
-        rolId: 2
+        rolId: rolAsignado
       });
+
       const roles = await nuevoUsuario.getRols(); 
       const rolesNombre = roles.map(r => r.nombre);
 
-      await generarTokensYEnviar(nuevoUsuario, res,rolesNombre);
-      res
-        .status(201)
-        .send({
-          message: "Usuario registrado exitosamente.",
-          id: nuevoUsuario.id,
-          fullName: nuevoUsuario.FullName, // getter
-          email: nuevoUsuario.Email,       // getter
-          status: nuevoUsuario.Status      // getter
+      // Generar y enviar tokens solo si es registro público
+      if (!req.user) {
+        await generarTokensYEnviar(nuevoUsuario, res, rolesNombre);
+      }
+
+      // Enviar respuesta
+      return res.status(201).send({
+        message: "Usuario registrado exitosamente.",
+        id: nuevoUsuario.id,
+        fullName: nuevoUsuario.FullName,
+        email: nuevoUsuario.Email,
+        status: nuevoUsuario.Status,
+        rolAsignado: rolAsignado
       });
+
     } catch (err) {
-      res.status(500).send({
+      console.error("Error al crear usuario:", err);
+      return res.status(500).send({
         message: err.message || "Ocurrió un error al crear el usuario."
       });
     }
   }
+
 
   // Obtener todos los usuarios
   async findAll(req, res) {

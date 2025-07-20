@@ -1,6 +1,5 @@
 const db = require("../models");
 const Rol = db.getModel("Rol");
-
 class RolController {
   async create(req, res) {
     const { nombre } = req.body;
