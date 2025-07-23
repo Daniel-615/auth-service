@@ -9,7 +9,7 @@ class UsuarioRoutes {
     this.router = express.Router();
     this.controller = new UsuarioController();
     this.registerRoutes();
-    app.use("/api/usuario", this.router);
+    app.use("/auth-service/usuario", this.router);
   }
 
   registerRoutes() {

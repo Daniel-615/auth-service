@@ -7,7 +7,7 @@ class PermisoRoutes{
         this.router=express.Router();
         this.controller=new PermisoController();
         this.registerRoutes();
-        app.use("/api/permiso",this.router);
+        app.use("/auth-service/permiso",this.router);
     }
     registerRoutes(){
         // Crear un nuevo permiso

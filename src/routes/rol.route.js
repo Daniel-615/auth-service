@@ -7,7 +7,7 @@ class RolRoutes{
         this.router=express.Router();
         this.controller=new RolController();
         this.registerRoutes();
-        app.use("/api/rol",this.router);
+        app.use("/auth-service/rol",this.router);
     }
     registerRoutes(){
         // Crear un nuevo rol

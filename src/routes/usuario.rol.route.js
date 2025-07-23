@@ -7,7 +7,7 @@ class RolPermisoRoutes {
     this.router = express.Router();
     this.controller = new UsuarioRolController();
     this.registerRoutes();
-    app.use("/api/usuario-rol", this.router);
+    app.use("/auth-service/usuario-rol", this.router);
   }
 
   registerRoutes() {
