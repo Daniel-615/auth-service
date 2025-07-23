@@ -13,23 +13,6 @@ class UsuarioRoutes {
   }
 
   registerRoutes() {
-    // Verificación de token básica
-    this.router.get('/', verifyToken, (req, res) => {
-      res.status(200).send({
-        message: "Token verificado correctamente.",
-        userId: req.user.id,
-        email: req.user.email
-      });
-    });
-
-    this.router.get("/protected", verifyToken, (req, res) => {
-      res.status(200).send({
-        message: "Acceso permitido.",
-        userId: req.user.id,
-        email: req.user.email
-      });
-    });
-
     // Auth tradicional
     this.router.post("/login", (req, res) => {
       this.controller.login(req, res);
@@ -66,14 +49,15 @@ class UsuarioRoutes {
     });
 
     // Reestablecimiento de contraseña
-    this.router.post("/forgot-password", (req, res) => {
+    this.router.post("/forgot-password", async (req, res) => {
       try {
-        this.controller.sendResetPassword(req, res);
+        await this.controller.sendResetPassword(req, res);
       } catch (err) {
         console.error(`Error al procesar solicitud de restablecimiento de contraseña: ${err.message}`);
         res.status(500).send({ message: "Error interno del servidor" });
       }
     });
+
 
     this.router.post("/reset-password", (req, res) => {
       try {

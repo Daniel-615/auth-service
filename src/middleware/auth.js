@@ -10,7 +10,7 @@ const verifyToken = (req, res, next) => {
 
   try {
     const data = jwt.verify(token, SECRET_JWT_KEY);
-    req.user = data; 
+    req.user = data;
     next();
   } catch (err) {
     console.error("Error al verificar el token:", err.message);

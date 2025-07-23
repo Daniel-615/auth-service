@@ -1,6 +1,6 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, BACKEND_URL } = require("../config/config");
+const { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, CALL_BACK_URL} = require("../config/config");
 const db = require("../models");
 const Usuario = db.getModel("Usuario");
 const bcrypt = require("bcrypt");
@@ -9,7 +9,7 @@ passport.use(
   new GoogleStrategy({
       clientID: OAUTH2_CLIENT_ID,
       clientSecret: OAUTH2_CLIENT_SECRET,
-      callbackURL: `${BACKEND_URL}/api/usuario/auth/google/callback`
+      callbackURL: `${CALL_BACK_URL}/auth-service/usuario/auth/google/callback`
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

@@ -2,9 +2,8 @@ const db = require("../models");
 const Usuario = db.getModel("Usuario");
 const Op = db.Sequelize.Op;
 const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser");
 const { generarTokensYEnviar } = require("../middleware/sendTokens.js");
-const { SECRET_JWT_KEY,NODE_ENV} = require("../config/config.js");
+const { SECRET_JWT_KEY,NODE_ENV,FRONTEND_URL} = require("../config/config.js");
 const validation_user= require("../middleware/validationUser.js");
 const { enviarCorreoRecuperacion } = require("../middleware/mailer.js");
 const UsuarioRol = db.getModel("UsuarioRol");
@@ -14,7 +13,7 @@ class UsuarioController {
   async create(req, res) {
     const { nombre, apellido, email, password, status, rolId } = req.body;
 
-    if (!nombre || !email || !password) {
+    if (!nombre || !apellido ||!email || !password) {
       return res.status(400).send({ message: "Faltan campos obligatorios." });
     }
 
@@ -393,9 +392,7 @@ class UsuarioController {
       const roles = await usuario.getRols();
       const rolesNombre = roles.map(r => r.nombre); 
       await generarTokensYEnviar(usuario,res,rolesNombre);
-      return res.send({
-        message: "Inicio de sesión exitoso con Google.",
-      }) //esto cambiarlo por el redireccionamiento al frontend luego.
+      return res.redirect(`${FRONTEND_URL}/inicio`); 
     } catch(err){
       console.error(`Error en el callback de Google: ${err.message}`);
       return res.status(500).send({
