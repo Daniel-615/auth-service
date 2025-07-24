@@ -11,7 +11,7 @@ function checkPermisosDesdeRoles(permisosRequeridos = []) {
       const usuario = await db.getModel("Usuario").findByPk(req.user.id, {
         include: {
           model: db.getModel("Rol"),
-          as: "Rols",
+          as: "roles",
           include: {
             model: db.getModel("Permiso"),
             as: "Permisos"
@@ -24,7 +24,7 @@ function checkPermisosDesdeRoles(permisosRequeridos = []) {
       }
 
       // Extraer permisos del usuario a partir de sus roles
-      const permisosDelUsuario = usuario.Rols.flatMap(rol =>
+      const permisosDelUsuario = usuario.roles.flatMap(rol =>
         rol.Permisos.map(p => p.nombre)
       );
 

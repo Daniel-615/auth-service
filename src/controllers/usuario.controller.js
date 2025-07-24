@@ -69,7 +69,14 @@ class UsuarioController {
         rolId: rolAsignado
       });
 
-      const roles = await nuevoUsuario.getRols(); 
+      const roles = await nuevoUsuario.getRoles({
+        include: [
+          {
+            model: db.getModel("Permiso"),
+            as: "Permisos"  // usa el alias correcto
+          }
+        ]
+      }); 
       const rolesNombre = roles.map(r => r.nombre);
 
       // Generar y enviar tokens solo si es registro público
@@ -196,7 +203,14 @@ class UsuarioController {
       if (!isValid) {
         return res.status(401).send({ message: "Contraseña incorrecta." });
       }
-      const roles = await usuario.getRols(); 
+      const roles = await usuario.getRoles({
+        include: [
+          {
+            model: db.getModel("Permiso"),
+            as: "Permisos"  // usa el alias correcto
+          }
+        ]
+      }); 
       const rolesNombre = roles.map(r => r.nombre);
 
       await generarTokensYEnviar(usuario, res,rolesNombre);
@@ -389,7 +403,14 @@ class UsuarioController {
   async googleCallBackHandler(req,res){
     try{
       const usuario=req.user;
-      const roles = await usuario.getRols();
+      const roles = await usuario.getRoles({
+        include: [
+          {
+            model: db.getModel("Permiso"),
+            as: "Permisos"  // usa el alias correcto
+          }
+        ]
+      });
       const rolesNombre = roles.map(r => r.nombre); 
       await generarTokensYEnviar(usuario,res,rolesNombre);
       return res.redirect(`${FRONTEND_URL}/inicio`); 

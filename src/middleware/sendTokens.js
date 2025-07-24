@@ -10,6 +10,7 @@ async function generarTokensYEnviar(usuario, res, rolesNombre) {
     where: { nombre: rolesNombre },
     include: {
       model: Permiso,
+      as: "Permisos", 
       attributes: ["nombre"],
       through: { attributes: [] } // no incluir tabla intermedia
     }
