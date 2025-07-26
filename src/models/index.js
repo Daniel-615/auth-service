@@ -52,6 +52,14 @@ class Database {
     // Relaciones Rol <-> Permiso
     Rol.belongsToMany(Permiso, { through: RolPermiso, foreignKey: 'rolId', as: 'Permisos' });
     Permiso.belongsToMany(Rol, { through: RolPermiso, foreignKey: 'permisoId' });
+    
+    //Nos permite hacer inner join en controlador rol-permisos
+    RolPermiso.belongsTo(Rol, { foreignKey: 'rolId', as: 'rol' });
+    RolPermiso.belongsTo(Permiso, { foreignKey: 'permisoId', as: 'permiso' });
+    //Nos permite hacer un inner join en controlador usuario-rol
+    UsuarioRol.belongsTo(Usuario, { foreignKey: 'usuarioId', as: 'usuario' });
+    UsuarioRol.belongsTo(Rol, { foreignKey: 'rolId', as: 'rol' });
+
   }
 
   get sequelize() {

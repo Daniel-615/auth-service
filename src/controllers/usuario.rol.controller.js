@@ -1,6 +1,7 @@
 const db = require("../models");
 const UsuarioRol = db.getModel("UsuarioRol");
-
+const Usuario=db.getModel("Usuario");
+const Rol=db.getModel("Rol");
 class UsuarioRolController {
     async create(req, res) {
         const { usuarioId, rolId } = req.body;
@@ -33,7 +34,20 @@ class UsuarioRolController {
 
     async findAll(req, res) {
         try {
-        const relaciones = await UsuarioRol.findAll();
+        const relaciones = await UsuarioRol.findAll({
+            include:[
+                {
+                    model: Usuario,
+                    as: 'usuario',
+                    attributes: ['id','nombre','email']
+                },
+                {
+                    model: Rol,
+                    as: 'rol',
+                    attributes: ['id','nombre']
+                }
+            ]
+        });
         return res.json(relaciones);
         } catch (err) {
         console.error("Error en findAll:", err);

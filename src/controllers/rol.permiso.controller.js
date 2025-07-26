@@ -1,50 +1,50 @@
 const db = require("../models");
 const RolPermiso = db.getModel("RolPermiso");
+const Rol = db.getModel("Rol");
+const Permiso = db.getModel("Permiso");
 
 class RolPermisoController {
   async createMany(req, res) {
     const relaciones = req.body;
 
     if (!Array.isArray(relaciones) || relaciones.length === 0) {
-        return res.status(400).send({ message: "Se requiere un arreglo de relaciones rol-permiso." });
+      return res.status(400).send({ message: "Se requiere un arreglo de relaciones rol-permiso." });
     }
 
     try {
-        // Elimina duplicados del array (antes de ir a la BD)
-        const relacionesUnicas = Array.from(
-            new Map(relaciones.map(r => [`${r.rolId}-${r.permisoId}`, r])).values()
-        );
+      const relacionesUnicas = Array.from(
+        new Map(relaciones.map(r => [`${r.rolId}-${r.permisoId}`, r])).values()
+      );
 
-        // Consultar cuáles ya existen en la BD
-        const existentes = await RolPermiso.findAll({
-            where: {
-                [db.Sequelize.Op.or]: relacionesUnicas
-            }
-        });
-
-        const existentesSet = new Set(existentes.map(r => `${r.rolId}-${r.permisoId}`));
-
-        const nuevos = relacionesUnicas.filter(r =>
-            !existentesSet.has(`${r.rolId}-${r.permisoId}`)
-        );
-
-        if (nuevos.length === 0) {
-            return res.status(409).send({ message: "Todas las relaciones ya existen." });
+      const existentes = await RolPermiso.findAll({
+        where: {
+          [db.Sequelize.Op.or]: relacionesUnicas
         }
+      });
 
-        const creados = await RolPermiso.bulkCreate(nuevos);
-        res.status(201).send({
-            message: "Relaciones creadas exitosamente.",
-            creadas: creados
-        });
+      const existentesSet = new Set(existentes.map(r => `${r.rolId}-${r.permisoId}`));
+
+      const nuevos = relacionesUnicas.filter(r =>
+        !existentesSet.has(`${r.rolId}-${r.permisoId}`)
+      );
+
+      if (nuevos.length === 0) {
+        return res.status(409).send({ message: "Todas las relaciones ya existen." });
+      }
+
+      const creados = await RolPermiso.bulkCreate(nuevos);
+      res.status(201).send({
+        message: "Relaciones creadas exitosamente.",
+        creadas: creados
+      });
     } catch (err) {
-        console.error("Error en createMany:", err);
-        res.status(500).send({
-            message: "Error al crear múltiples relaciones.",
-            error: err.message
-        });
+      console.error("Error en createMany:", err);
+      res.status(500).send({
+        message: "Error al crear múltiples relaciones.",
+        error: err.message
+      });
     }
-}
+  }
 
   async create(req, res) {
     const { rolId, permisoId } = req.body;
@@ -74,8 +74,13 @@ class RolPermisoController {
 
   async findAll(req, res) {
     try {
-      const relaciones = await RolPermiso.findAll();
-      return res.json(relaciones);
+      const relaciones = await RolPermiso.findAll({
+        include: [
+          { model: Rol, as: 'rol',attributes: ["id", "nombre"] },
+          { model: Permiso, as: 'permiso',attributes: ["id", "nombre"] }
+        ]
+      });
+      return res.status(200).json(relaciones);
     } catch (err) {
       console.error("Error en findAll:", err);
       return res.status(500).json({ message: "Error al obtener las relaciones rol-permiso.", error: err.message });
@@ -90,13 +95,19 @@ class RolPermisoController {
     }
 
     try {
-      const relacion = await RolPermiso.findOne({ where: { rolId, permisoId } });
+      const relacion = await RolPermiso.findOne({
+        where: { rolId, permisoId },
+        include: [
+          { model: Rol, as:'rol',attributes: ["id", "nombre"] },
+          { model: Permiso, as: 'permiso', attributes: ["id", "nombre"] }
+        ]
+      });
 
       if (!relacion) {
         return res.status(404).json({ message: "Relación rol-permiso no encontrada." });
       }
 
-      return res.json(relacion);
+      return res.status(200).json(relacion);
     } catch (err) {
       console.error("Error en findOne:", err);
       return res.status(500).json({ message: "Error al obtener la relación.", error: err.message });

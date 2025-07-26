@@ -2,7 +2,7 @@ const express = require("express");
 const UsuarioRolController = require("../controllers/usuario.rol.controller.js");
 const verifyToken = require('../middleware/auth.js');
 const { checkPermisosDesdeRoles } = require('../middleware/checkRole.js');
-class RolPermisoRoutes {
+class UsuarioRolRoutes {
   constructor(app) {
     this.router = express.Router();
     this.controller = new UsuarioRolController();
@@ -26,4 +26,4 @@ class RolPermisoRoutes {
   }
 }
 
-module.exports = RolPermisoRoutes;
+module.exports = UsuarioRolRoutes;
