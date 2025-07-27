@@ -1,4 +1,4 @@
-const { BACKEND_URL, EMAIL_PASSWORD, EMAIL_USER } = require("../config/config.js");
+const {  EMAIL_PASSWORD, EMAIL_USER, FRONTEND_URL } = require("../config/config.js");
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
 });
 
 async function enviarCorreoRecuperacion(destinatario, token) {
-  const resetLink = `${BACKEND_URL}/api/usuario/reset-password?token=${token}`;
+  const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
 
   try {
     const info = await transporter.sendMail({

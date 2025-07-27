@@ -220,9 +220,13 @@ class UsuarioController {
       res
         .status(200).send({
         message: "Inicio de sesión exitoso.",
+        "user":{
+           "username": usuario.nombre + " " +usuario.apellido,
+           "rol": rolesNombre
+        }
       })
     }catch(err){
-       console.log(`Error al iniciar sesión: ${err.message}`); // Log del error
+       console.log(`Error al iniciar sesión: ${err.message}`);
       return res.status(500).send({
         message: "Error al iniciar sesión"
       });
@@ -407,13 +411,13 @@ class UsuarioController {
         include: [
           {
             model: db.getModel("Permiso"),
-            as: "Permisos"  // usa el alias correcto
+            as: "Permisos"  
           }
         ]
       });
       const rolesNombre = roles.map(r => r.nombre); 
       await generarTokensYEnviar(usuario,res,rolesNombre);
-      return res.redirect(`${FRONTEND_URL}/inicio`); 
+      return res.redirect(`${FRONTEND_URL}/`); 
     } catch(err){
       console.error(`Error en el callback de Google: ${err.message}`);
       return res.status(500).send({
