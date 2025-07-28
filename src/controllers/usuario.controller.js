@@ -7,7 +7,6 @@ const { SECRET_JWT_KEY,NODE_ENV,FRONTEND_URL} = require("../config/config.js");
 const validation_user= require("../middleware/validationUser.js");
 const { enviarCorreoRecuperacion } = require("../middleware/mailer.js");
 const UsuarioRol = db.getModel("UsuarioRol");
-
 class UsuarioController {
   
   async create(req, res) {
@@ -19,9 +18,9 @@ class UsuarioController {
 
     try {
       // Validaciones
-      validation_user.userName(nombre);
-      validation_user.email(email);
-      validation_user.password(password);
+      validation_user.userName(nombre,res);
+      validation_user.email(email,res);
+      validation_user.password(password,res);
 
       // Verificar duplicados
       const existingUsername = await Usuario.findOne({ where: { nombre, apellido } });
@@ -88,7 +87,7 @@ class UsuarioController {
       return res.status(201).send({
         message: "Usuario registrado exitosamente.",
         id: nuevoUsuario.id,
-        fullName: nuevoUsuario.FullName,
+        fullName: nuevoUsuario.nombre + " " + nuevoUsuario.apellido,
         email: nuevoUsuario.Email,
         status: nuevoUsuario.Status,
         rolAsignado: rolAsignado
@@ -162,7 +161,7 @@ class UsuarioController {
         return res.status(403).send({ message: "Token inválido o usuario no encontrado." });
       }
 
-      jwt.verify(refreshToken, SECRET_JWT_KEY, (err, decoded) => {
+      jwt.verify(refreshToken, SECRET_JWT_KEY, async(err, decoded) => {
         if (err || usuario.email !== decoded.email) {
           return res.status(403).send({ message: "Token inválido." });
         }
@@ -180,7 +179,13 @@ class UsuarioController {
             sameSite: "strict",
             maxAge: 60*60*1000 // 1 hora de vida
           })
-          .send({ message: "Token renovado exitosamente." });
+          .send({
+              message: "Token renovado exitosamente.",
+              success: true,
+              "user":{
+                username: usuario.nombre + " "+ usuario.apellido
+              } 
+            });
       });
     } catch (err) {
       console.error("Error al renovar token:", err.message);
@@ -190,8 +195,8 @@ class UsuarioController {
 
   async login(req,res){
     const { email, password } = req.body;
-    validation_user.email(email);
-    validation_user.password(password);
+    validation_user.email(email,res);
+    validation_user.password(password,res);
     try{
       const usuario=await Usuario.findOne({ where: { email, status: true}});
       
@@ -199,8 +204,8 @@ class UsuarioController {
         return res.status(404).send({ message: "Usuario no encontrado." });
       }
 
-      const isValid = usuario.isValid(password, usuario.password);
-      if (!isValid) {
+      const call = await usuario.isValid(password, usuario.password);
+      if (!call) {
         return res.status(401).send({ message: "Contraseña incorrecta." });
       }
       const roles = await usuario.getRoles({

@@ -13,7 +13,8 @@ class Usuario extends Model {
         return this.email;
     }
     async isValid(password, passwordHash){
-      return await bcrypt.compare(password, passwordHash);
+      const value= await bcrypt.compare(password, passwordHash);
+      return value;
     }
     //Setters
     set Password(newPassword) {
