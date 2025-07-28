@@ -69,7 +69,9 @@ class UsuarioRoutes {
     });
 
     // Rutas de usuario protegidas
-
+    this.router.get("/verifyToken",verifyToken,(req,res)=>{
+      this.controller.verifyRefreshToken(req,res);
+    })
     this.router.put("/:id", verifyToken,checkPermisosDesdeRoles(["actualizar_usuario"]), (req, res) => {
       this.controller.update(req, res);
     });

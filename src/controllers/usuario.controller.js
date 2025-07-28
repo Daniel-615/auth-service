@@ -3,12 +3,53 @@ const Usuario = db.getModel("Usuario");
 const Op = db.Sequelize.Op;
 const jwt = require("jsonwebtoken");
 const { generarTokensYEnviar } = require("../middleware/sendTokens.js");
-const { SECRET_JWT_KEY,NODE_ENV,FRONTEND_URL} = require("../config/config.js");
+const { SECRET_JWT_KEY,FRONTEND_URL} = require("../config/config.js");
 const validation_user= require("../middleware/validationUser.js");
 const { enviarCorreoRecuperacion } = require("../middleware/mailer.js");
+const cookieOptions = require("../middleware/cookieOptions.js");
 const UsuarioRol = db.getModel("UsuarioRol");
 class UsuarioController {
-  
+    async verifyRefreshToken(req,res){
+      const token=req.cookies?.refresh_token;
+      if(!token){
+        return res
+        .status(401).send({
+          message: "No se encontró el token de sesión."
+        })
+      }
+      try{
+        const decoded=jwt.verify(token,SECRET_JWT_KEY);
+        const usuario=await Usuario.findOne({
+          where:{
+            id: decoded.id,
+            email: decoded.email,
+            refreshToken: token,
+            status:true
+          }
+        })
+        if(!usuario){
+          return res
+          .status(404)
+          .send({
+            message: "Usuario no encontrado"
+          })
+        }
+        return res
+        .status(200)
+        .send({
+          "userId": usuario.id,
+          "email": usuario.email,
+          "rol": decoded.rol
+        })
+      }catch(error){
+        return res
+        .status(403)
+        .send({
+          message: "Token inválido o expirado:"
+        })
+
+      }
+    }
   async create(req, res) {
     const { nombre, apellido, email, password, status, rolId } = req.body;
 
@@ -87,7 +128,8 @@ class UsuarioController {
       return res.status(201).send({
         message: "Usuario registrado exitosamente.",
         id: nuevoUsuario.id,
-        fullName: nuevoUsuario.nombre + " " + nuevoUsuario.apellido,
+        nombre: nuevoUsuario.nombre,
+        apellido:nuevoUsuario.apellido,
         email: nuevoUsuario.Email,
         status: nuevoUsuario.Status,
         rolAsignado: rolAsignado
@@ -174,9 +216,7 @@ class UsuarioController {
 
         res
           .cookie("access_token", newAccessToken, {
-            httpOnly: true,
-            secure: NODE_ENV === "production",
-            sameSite: "strict",
+            ...cookieOptions,
             maxAge: 60*60*1000 // 1 hora de vida
           })
           .send({
@@ -226,8 +266,10 @@ class UsuarioController {
         .status(200).send({
         message: "Inicio de sesión exitoso.",
         "user":{
-           "username": usuario.nombre + " " +usuario.apellido,
-           "rol": rolesNombre
+          "id": usuario.id, 
+          "nombre": usuario.nombre,
+          "apellido": usuario.apellido,
+          "rol": rolesNombre
         }
       })
     }catch(err){
@@ -247,21 +289,28 @@ class UsuarioController {
         return res.status(404).send({ message: "Usuario no encontrado o inactivo." });
       }
 
-      const { nombre, apellido, email, password, status } = req.body;
-
-      if (nombre) usuario.Nombre = nombre;
-      if (apellido) usuario.Apellido = apellido;
-      if (email) usuario.Email = email;
-      if (password) usuario.Password = password;
-      if (status !== undefined) usuario.Status = status;
-
+      const { nombre, apellido, email } = req.body;
+      if(!nombre || !apellido){
+        return res
+        .status(400)
+        .send({
+          message: "Se requieren todos los campos."
+        })
+      }
+      validation_user.nombre(nombre)
+      validation_user.apellido(apellido)
+      usuario.nombre = nombre;
+      usuario.apellido = apellido;
+      if(email){
+        validation_user.email(email)
+        usuario.email = email;
+      }
       await usuario.save();
 
       res.send({
         message: "Usuario actualizado.",
-        fullName: usuario.FullName,
-        email: usuario.Email,
-        status: usuario.Status
+        fullName: usuario.nombre + " "+ usuario.apellido,
+        email: usuario.email,
       });
     } catch (err) {
       res.status(500).send({
@@ -281,15 +330,15 @@ class UsuarioController {
         }
       }
 
-      res.clearCookie("access_token");
-      res.clearCookie("refresh_token");
-
+      res.clearCookie("access_token",{cookieOptions,maxAge:0});
+      res.clearCookie("refresh_token",{cookieOptions,maxAge:0});
       res.status(200).json({ message: "Sesión cerrada exitosamente" });
     } catch (err) {
       console.error("Error al cerrar sesión:", err.message);
       res.status(500).json({ message: "Error al cerrar sesión" });
     }
   }
+
 
 
   //PANEL ADMINISTRADOR delete y mostrar todos los usuarios activos.

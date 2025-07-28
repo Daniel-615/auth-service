@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
-const { SECRET_JWT_KEY, NODE_ENV } = require("../config/config.js");
+const { SECRET_JWT_KEY} = require("../config/config.js");
 const db = require("../models");
 const Rol = db.getModel("Rol");
 const Permiso = db.getModel("Permiso");
-
+const cookieOptions = require("./cookieOptions");
 async function generarTokensYEnviar(usuario, res, rolesNombre) {
   // Obtener permisos desde los roles
   const roles = await Rol.findAll({
@@ -47,16 +47,12 @@ async function generarTokensYEnviar(usuario, res, rolesNombre) {
   return usuario.save().then(() => {
     res
       .cookie("access_token", accessToken, {
-        httpOnly: true,
-        secure: NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 60 * 60 * 1000 // 1 hora
+        ...cookieOptions,
+        maxAge: 60 * 60 * 1000, // 1 hora
       })
       .cookie("refresh_token", refreshToken, {
-        httpOnly: true,
-        secure: NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
       });
   });
 }
