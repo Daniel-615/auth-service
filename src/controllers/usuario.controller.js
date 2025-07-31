@@ -39,7 +39,9 @@ class UsuarioController {
         .send({
           "userId": usuario.id,
           "email": usuario.email,
-          "rol": decoded.rol
+          "rol": decoded.rol,
+          "nombre": decoded.nombre,
+          "apellido": decoded.apellido
         })
       }catch(error){
         return res
@@ -131,7 +133,6 @@ class UsuarioController {
         nombre: nuevoUsuario.nombre,
         apellido:nuevoUsuario.apellido,
         email: nuevoUsuario.Email,
-        status: nuevoUsuario.Status,
         rolAsignado: rolAsignado
       });
 
@@ -144,44 +145,115 @@ class UsuarioController {
   }
 
 
-  // Obtener todos los usuarios
   async findAll(req, res) {
-    const nombre = req.query.nombre;
-    const condition = nombre ? { nombre: { [Op.iLike]: `%${nombre}%` } } : null;
+  const nombre = req.query.nombre;
+  const condition = nombre ? { nombre: { [Op.iLike]: `%${nombre}%` } } : null;
 
-    try {
-      const usuarios = await Usuario.findAll({ where: condition });
+  try {
+    const usuarios = await Usuario.findAll({
+      where: condition,
+      include: [
+        {
+          model: db.getModel("UsuarioRol"),
+          as: 'usuario_roles',
+          include: [
+            {
+              model: db.getModel("Rol"),
+              as: "rol",
+            },
+          ],
+        },
+      ],
+    });
 
-      const usuariosConFullName = usuarios.map(u => ({
-        id: u.id,
-        fullName: u.FullName,
-        email: u.Email,
-        status: u.Status,
-      }));
+    const usuariosConFullName = usuarios.map((u) => ({
+      id: u.id,
+      nombre: u.nombre,
+      apellido: u.apellido,
+      email: u.email,
+      status: u.Status,
+      rol: u.usuario_roles?.[0]?.rol?.nombre || null,
+    }));
 
-      res.send(usuariosConFullName);
-    } catch (err) {
-      res.status(500).send({
-        message: err.message || "Error al obtener los usuarios."
-      });
-    }
+    res.send(usuariosConFullName);
+  } catch (err) {
+    res.status(500).send({
+      message: err.message || "Error al obtener los usuarios.",
+    });
   }
+}
+
+async findAllActivos(req, res) {
+  try {
+    const activos = await Usuario.findAll({
+      where: { status: true },
+      include: [
+        {
+          model: db.getModel("UsuarioRol"),
+          as: 'usuario_roles',
+          include: [
+            {
+              model: db.getModel("Rol"),
+              as: "rol",
+            },
+          ],
+        },
+      ],
+    });
+
+    const resultado = activos.map((u) => ({
+      id: u.id,
+      nombre: u.nombre,
+      apellido: u.apellido,
+      email: u.email,
+      rol: u.usuario_roles?.[0]?.rol?.nombre || null,
+    }));
+
+    res.send(resultado);
+  } catch (err) {
+    res.status(500).send({
+      message: err.message || "Error al obtener usuarios activos.",
+    });
+  }
+}
+
  
   // Obtener un usuario por ID
   async findOne(req, res) {
     const id = req.params.id;
-
     try {
-      const usuario = await Usuario.findByPk(id);
+      const usuario = await Usuario.findByPk(id,{
+        include:[
+          {
+            model: db.getModel("UsuarioRol"),
+            as: "usuario_roles",
+            include:[
+              {
+                model: db.getModel("Rol"),
+                as: "rol",
+                include:[
+                  {
+                    model: db.getModel("Permiso"),
+                    as: 'Permisos',
+                    through: {attributes: []},
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      });
       if (!usuario) {
         return res.status(404).send({ message: "Usuario no encontrado." });
       }
 
       res.send({
         id: usuario.id,
-        fullName: usuario.FullName,
-        email: usuario.Email,
-        status: usuario.Status
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
+        email: usuario.email,
+        rol: usuario.usuario_roles?.[0]?.rol?.nombre || null,
+        permisos: usuario.usuario_roles?.[0]?.rol?.Permisos?.map(p => p.nombre) || []
       });
     } catch (err) {
       res.status(500).send({
@@ -222,9 +294,7 @@ class UsuarioController {
           .send({
               message: "Token renovado exitosamente.",
               success: true,
-              "user":{
-                username: usuario.nombre + " "+ usuario.apellido
-              } 
+              userId: usuario.id,
             });
       });
     } catch (err) {
@@ -282,7 +352,6 @@ class UsuarioController {
   // Actualizar un usuario
   async update(req, res) {
     const id = req.params.id;
-
     try {
       const usuario = await Usuario.findByPk(id);
       if (!usuario) {
@@ -297,8 +366,8 @@ class UsuarioController {
           message: "Se requieren todos los campos."
         })
       }
-      validation_user.nombre(nombre)
-      validation_user.apellido(apellido)
+      
+      validation_user.userName(nombre+ apellido)
       usuario.nombre = nombre;
       usuario.apellido = apellido;
       if(email){
@@ -306,10 +375,11 @@ class UsuarioController {
         usuario.email = email;
       }
       await usuario.save();
-
       res.send({
+        success: true,
         message: "Usuario actualizado.",
-        fullName: usuario.nombre + " "+ usuario.apellido,
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
         email: usuario.email,
       });
     } catch (err) {
@@ -388,24 +458,7 @@ class UsuarioController {
       });
     }
   }
-  // Obtener usuarios activos
-  async findAllActivos(req, res) {
-    try {
-      const activos = await Usuario.findAll({ where: { status: true } });
 
-      const resultado = activos.map(u => ({
-        id: u.id,
-        fullName: u.FullName,
-        email: u.Email
-      }));
-
-      res.send(resultado);
-    } catch (err) {
-      res.status(500).send({
-        message: err.message || "Error al obtener usuarios activos."
-      });
-    }
-  }
   async resetPassword(req, res) {
     const { token } = req.query;
     const { newPassword}= req.body;
@@ -457,6 +510,7 @@ class UsuarioController {
       });
     }
   }
+
   //OAUTH2
   async googleCallBackHandler(req,res){
     try{

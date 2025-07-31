@@ -45,20 +45,21 @@ class Database {
   _associateModels() {
     const { Usuario, Rol, Permiso, UsuarioRol, RolPermiso } = this.models;
 
-    // Relaciones Usuario <-> Rol
-    Usuario.belongsToMany(Rol, { through: UsuarioRol, foreignKey: 'usuarioId', as: 'roles'});
+    Usuario.hasMany(UsuarioRol, { foreignKey: 'usuarioId', as: 'usuario_roles' });
+    UsuarioRol.belongsTo(Usuario, { foreignKey: 'usuarioId', as: 'usuario' });
+
+    Usuario.belongsToMany(Rol, { through: UsuarioRol, foreignKey: 'usuarioId', as: 'roles' });
     Rol.belongsToMany(Usuario, { through: UsuarioRol, foreignKey: 'rolId' });
 
-    // Relaciones Rol <-> Permiso
+    UsuarioRol.belongsTo(Rol, { foreignKey: 'rolId', as: 'rol' });
+    Rol.hasMany(UsuarioRol, { foreignKey: 'rolId' });
+
     Rol.belongsToMany(Permiso, { through: RolPermiso, foreignKey: 'rolId', as: 'Permisos' });
     Permiso.belongsToMany(Rol, { through: RolPermiso, foreignKey: 'permisoId' });
-    
-    //Nos permite hacer inner join en controlador rol-permisos
+
     RolPermiso.belongsTo(Rol, { foreignKey: 'rolId', as: 'rol' });
     RolPermiso.belongsTo(Permiso, { foreignKey: 'permisoId', as: 'permiso' });
-    //Nos permite hacer un inner join en controlador usuario-rol
-    UsuarioRol.belongsTo(Usuario, { foreignKey: 'usuarioId', as: 'usuario' });
-    UsuarioRol.belongsTo(Rol, { foreignKey: 'rolId', as: 'rol' });
+
 
   }
 

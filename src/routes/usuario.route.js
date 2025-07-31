@@ -67,7 +67,6 @@ class UsuarioRoutes {
         res.status(500).send({ message: "Error interno del servidor" });
       }
     });
-
     // Rutas de usuario protegidas
     this.router.get("/verifyToken",verifyToken,(req,res)=>{
       this.controller.verifyRefreshToken(req,res);
