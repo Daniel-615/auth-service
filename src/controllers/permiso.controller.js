@@ -21,15 +21,32 @@ class PermisoController{
             return res.status(500).send({message:err.message || "Error al verificar el permiso."})
         }
     }
-    //Obtener todos los permisos
-    async findAll(req,res){
-        try{
-            const permisos=await Permiso.findAll()
-            res.send(permisos)
-        }catch(err){
-            return res.status(500).send({message:err.message || "Error al obtener los permisos."})
+    //Obtener todos los permisos paginados
+    async findAll(req, res) {
+        try {
+            const page = parseInt(req.query.page) || 1;        // Página actual
+            const limit = parseInt(req.query.limit) || 10;     // Elementos por página
+            const offset = (page - 1) * limit;
+
+            const { count, rows } = await Permiso.findAndCountAll({
+            limit,
+            offset,
+            order: [['id', 'ASC']], // opcional
+            });
+
+            res.send({
+            data: rows,
+            total: count,
+            page,
+            totalPages: Math.ceil(count / limit),
+            });
+        } catch (err) {
+            return res
+            .status(500)
+            .send({ message: err.message || "Error al obtener los permisos." });
         }
     }
+
     async findOne(req,res){
         const id=req.params.id
         try{
