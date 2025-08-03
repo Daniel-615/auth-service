@@ -14,16 +14,8 @@ class RolPermisoRoutes {
   registerRoutes() {
     // Crear una relación rol-permiso
     this.router.post("/", verifyToken,checkPermisosDesdeRoles(["asignar_permisos","asignar_roles"]), this.controller.create.bind(this.controller));
-
-    // Crear múltiples relaciones rol-permiso
-    this.router.post("/many", verifyToken, checkPermisosDesdeRoles(["asignar_permisos","asignar_roles"]), (req,res)=>{
-        try{
-            this.controller.createMany.bind(this.controller)
-        }catch(err){
-            console.error("Error al crear múltiples relaciones:", err);
-        }
-    });
-
+    //Obtener los permisos no asignados a un rol
+    this.router.get("/rol-no-asignado/:rolId",verifyToken,checkPermisosDesdeRoles(["ver_roles","ver_permisos"]),this.controller.permisosNoAsignados.bind(this.controller));
     // Obtener todas las relaciones rol-permiso
     this.router.get("/", verifyToken, checkPermisosDesdeRoles(["ver_roles","ver_permisos"]),this.controller.findAll.bind(this.controller));
 

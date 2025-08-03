@@ -45,11 +45,24 @@ class Database {
   _associateModels() {
     const { Usuario, Rol, Permiso, UsuarioRol, RolPermiso } = this.models;
 
-    Usuario.hasMany(UsuarioRol, { foreignKey: 'usuarioId', as: 'usuario_roles' });
+    Usuario.hasMany(UsuarioRol, {
+      foreignKey: 'usuarioId',
+      as: 'usuario_roles',
+      onDelete: 'CASCADE',
+      hooks: true
+    });
     UsuarioRol.belongsTo(Usuario, { foreignKey: 'usuarioId', as: 'usuario' });
 
-    Usuario.belongsToMany(Rol, { through: UsuarioRol, foreignKey: 'usuarioId', as: 'roles' });
-    Rol.belongsToMany(Usuario, { through: UsuarioRol, foreignKey: 'rolId' });
+    Usuario.belongsToMany(Rol, {
+      through: UsuarioRol,
+      foreignKey: 'usuarioId',
+      as: 'roles',
+      onDelete: 'CASCADE'
+    });
+    Rol.belongsToMany(Usuario, {
+      through: UsuarioRol,
+      foreignKey: 'rolId',
+    });
 
     UsuarioRol.belongsTo(Rol, { foreignKey: 'rolId', as: 'rol' });
     Rol.hasMany(UsuarioRol, { foreignKey: 'rolId' });

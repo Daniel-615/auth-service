@@ -2,50 +2,40 @@ const db = require("../models");
 const RolPermiso = db.getModel("RolPermiso");
 const Rol = db.getModel("Rol");
 const Permiso = db.getModel("Permiso");
+const { Op } = require("sequelize");
 
 class RolPermisoController {
-  async createMany(req, res) {
-    const relaciones = req.body;
+  
+  async permisosNoAsignados(req, res) {
+    const { rolId } = req.params;
 
-    if (!Array.isArray(relaciones) || relaciones.length === 0) {
-      return res.status(400).send({ message: "Se requiere un arreglo de relaciones rol-permiso." });
+    if (!rolId) {
+      return res.status(400).json({ message: "rolId es requerido." });
     }
 
     try {
-      const relacionesUnicas = Array.from(
-        new Map(relaciones.map(r => [`${r.rolId}-${r.permisoId}`, r])).values()
-      );
+      const asignados = await RolPermiso.findAll({
+        where: { rolId },
+        attributes: ['permisoId']
+      });
 
-      const existentes = await RolPermiso.findAll({
+      const idsAsignados = asignados.map(rp => rp.permisoId);
+
+      const noAsignados = await Permiso.findAll({
         where: {
-          [db.Sequelize.Op.or]: relacionesUnicas
-        }
+          id: {
+            [Op.notIn]: idsAsignados.length > 0 ? idsAsignados : [0] // [0] evita excluir todo si vacío
+          }
+        },
+        attributes: ['id', 'nombre']
       });
 
-      const existentesSet = new Set(existentes.map(r => `${r.rolId}-${r.permisoId}`));
-
-      const nuevos = relacionesUnicas.filter(r =>
-        !existentesSet.has(`${r.rolId}-${r.permisoId}`)
-      );
-
-      if (nuevos.length === 0) {
-        return res.status(409).send({ message: "Todas las relaciones ya existen." });
-      }
-
-      const creados = await RolPermiso.bulkCreate(nuevos);
-      res.status(201).send({
-        message: "Relaciones creadas exitosamente.",
-        creadas: creados
-      });
+      return res.status(200).json({ success: true, data: noAsignados });
     } catch (err) {
-      console.error("Error en createMany:", err);
-      res.status(500).send({
-        message: "Error al crear múltiples relaciones.",
-        error: err.message
-      });
+      console.error("Error en permisosNoAsignados:", err);
+      return res.status(500).json({ message: "Error al obtener permisos no asignados.", error: err.message });
     }
   }
-
   async create(req, res) {
     const { rolId, permisoId } = req.body;
 
@@ -73,19 +63,47 @@ class RolPermisoController {
   }
 
   async findAll(req, res) {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
     try {
-      const relaciones = await RolPermiso.findAll({
+      const { count, rows } = await RolPermiso.findAndCountAll({
         include: [
-          { model: Rol, as: 'rol',attributes: ["id", "nombre"] },
-          { model: Permiso, as: 'permiso',attributes: ["id", "nombre"] }
-        ]
+          {
+            model: Rol,
+            as: 'rol',
+            attributes: ['id', 'nombre'],
+            required: true // INNER JOIN
+          },
+          {
+            model: Permiso,
+            as: 'permiso',
+            attributes: ['id', 'nombre'],
+            required: true // INNER JOIN
+          }
+        ],
+        limit,
+        offset
       });
-      return res.status(200).json(relaciones);
+
+      const totalPages = Math.ceil(count / limit);
+
+      return res.status(200).json({
+        data: rows,
+        total: count,
+        page,
+        totalPages
+      });
     } catch (err) {
       console.error("Error en findAll:", err);
-      return res.status(500).json({ message: "Error al obtener las relaciones rol-permiso.", error: err.message });
+      return res.status(500).json({
+        message: "Error al obtener las relaciones rol-permiso.",
+        error: err.message
+      });
     }
   }
+
 
   async findOne(req, res) {
     const { rolId, permisoId } = req.params;
