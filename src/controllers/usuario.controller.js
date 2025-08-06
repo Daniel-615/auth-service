@@ -247,7 +247,7 @@ async findAllActivos(req, res) {
         return res.status(404).send({ message: "Usuario no encontrado." });
       }
 
-      res.send({
+      res.status(200).send({
         id: usuario.id,
         nombre: usuario.nombre,
         apellido: usuario.apellido,
