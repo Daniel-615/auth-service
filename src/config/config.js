@@ -1,19 +1,19 @@
 const dotenv = require('dotenv');
 dotenv.config();
-const { APP_PORT = 3000 } = process.env;
+const { PORT } = process.env;
 const { 
-  HOST,USER,PASSWORD,DB,PORT,SECRET_JWT_KEY,
+  HOST,USER,PASSWORD,DB,DB_PORT,SECRET_JWT_KEY,
   FRONTEND_URL,BACKEND_URL,EMAIL_PASSWORD,EMAIL_USER,
   OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET,CALL_BACK_URL
 }= process.env;
 
 module.exports = {
-  APP_PORT,
+  PORT,
   HOST,
   USER,
   PASSWORD,
   DB,
-  PORT,
+  DB_PORT,
   SALT_ROUNDS:10,
   SECRET_JWT_KEY,
   FRONTEND_URL,
