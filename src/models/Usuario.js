@@ -54,7 +54,7 @@ module.exports = (sequelize) => {
         },
       },
       refreshToken: {
-        type: DataTypes.CLOB,                 
+        type: DataTypes.TEXT,                 
         allowNull: true,
       },
       resetToken: {

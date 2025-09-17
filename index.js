@@ -41,11 +41,16 @@ class Server {
 
   async connectDatabase() {
     try {
-      await db.sequelize.sync({alter: true}); // o sync({ force: true }) si estás en desarrollo
+      await db.sequelize.sync({force: true}); // o sync({ force: true }) si estás en desarrollo
       console.log('Base de datos conectada y sincronizada.');
 
-      const tables = await db.sequelize.getQueryInterface().showAllTables();
-      console.log('Tablas en la base de datos:', tables);
+      const [rows] = await db.sequelize.query(`
+        SELECT table_name 
+        FROM user_tables 
+        WHERE table_name IN ('USUARIOS', 'ROLES', 'PERMISOS', 'ROL_PERMISO', 'USUARIO_ROL')
+        ORDER BY table_name
+      `);
+      console.log('Tablas de la app:', rows.map(r => r.TABLE_NAME));
     } catch (error) {
       console.error('Error al conectar con la base de datos:', error);
     }

@@ -36,9 +36,6 @@ module.exports = (sequelize) => {
       tableName: 'ROLES',     
       timestamps: true,       
       underscored: true,      
-      indexes: [
-        { unique: true, fields: ['nombre'] },
-      ],
     }
   );
 

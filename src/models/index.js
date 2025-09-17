@@ -1,6 +1,5 @@
 const { Sequelize } = require('sequelize');
 const dbConfig = require('../config/db.config.js');
-s
 
 class Database {
   constructor() {
