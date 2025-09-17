@@ -1,27 +1,20 @@
-const Sequelize = require('sequelize');
+const { Sequelize } = require('sequelize');
 const dbConfig = require('../config/db.config.js');
+s
 
 class Database {
   constructor() {
-    this._sequelize = new Sequelize(
-      dbConfig.DB,
-      dbConfig.USER,
-      dbConfig.PASSWORD,
-      {
-        host: dbConfig.HOST,
-        port: dbConfig.PORT,
-        dialect: dbConfig.dialect,
-        port: dbConfig.PORT,
-        pool: dbConfig.pool,
-        dialectOptions: {
-          ssl: {
-            require: true,
-            rejectUnauthorized: false
-          }
-        },
-        logging: false 
-      }
-    );
+    this._sequelize = new Sequelize({
+      username: dbConfig.username,
+      password: dbConfig.password,
+      dialect: dbConfig.dialect,             
+      dialectOptions: dbConfig.dialectOptions, 
+      pool: dbConfig.pool,
+      logging: false,                        
+      define: {
+        underscored: true,                    
+      },
+    });
 
     this.Sequelize = Sequelize;
     this.models = {};
@@ -33,47 +26,78 @@ class Database {
   _loadModels() {
     const sequelize = this._sequelize;
 
-    // Cargar modelos
-    this.models.Usuario = require('./Usuario.js')(sequelize);
-    this.models.Rol = require('./Rol.js')(sequelize);
-    this.models.Permiso = require('./Permiso.js')(sequelize);
-    this.models.UsuarioRol = require('./UsuarioRol.js')(sequelize);
-    this.models.RolPermiso = require('./RolPermiso.js')(sequelize);
-    }
-
+    //carga modelos
+    this.models.Usuario      = require('./Usuario.js')(sequelize);
+    this.models.Rol          = require('./Rol.js')(sequelize);
+    this.models.Permiso      = require('./Permiso.js')(sequelize);
+    this.models.UsuarioRol   = require('./UsuarioRol.js')(sequelize);
+    this.models.RolPermiso   = require('./RolPermiso.js')(sequelize);
+  }
 
   _associateModels() {
     const { Usuario, Rol, Permiso, UsuarioRol, RolPermiso } = this.models;
 
+    // --- Usuario <-> Rol (N:M) via UsuarioRol ---
+    Usuario.belongsToMany(Rol, {
+      through: UsuarioRol,
+      foreignKey: 'usuarioId',   // FK en la tabla puente apuntando a USUARIOS.ID
+      otherKey: 'rolId',
+      as: 'roles',
+      onDelete: 'CASCADE',
+    });
+    Rol.belongsToMany(Usuario, {
+      through: UsuarioRol,
+      foreignKey: 'rolId',       // FK en la tabla puente apuntando a ROLES.ID
+      otherKey: 'usuarioId',
+      as: 'usuarios',
+      onDelete: 'CASCADE',
+    });
+
+    // (Opcional) Relaciones 1:N para facilitar includes
     Usuario.hasMany(UsuarioRol, {
       foreignKey: 'usuarioId',
       as: 'usuario_roles',
       onDelete: 'CASCADE',
-      hooks: true
+      hooks: true,
     });
-    UsuarioRol.belongsTo(Usuario, { foreignKey: 'usuarioId', as: 'usuario' });
-
-    Usuario.belongsToMany(Rol, {
-      through: UsuarioRol,
+    UsuarioRol.belongsTo(Usuario, {
       foreignKey: 'usuarioId',
-      as: 'roles',
-      onDelete: 'CASCADE'
+      as: 'usuario',
     });
-    Rol.belongsToMany(Usuario, {
-      through: UsuarioRol,
+    Rol.hasMany(UsuarioRol, {
       foreignKey: 'rolId',
+      as: 'rol_usuarios',
+    });
+    UsuarioRol.belongsTo(Rol, {
+      foreignKey: 'rolId',
+      as: 'rol',
     });
 
-    UsuarioRol.belongsTo(Rol, { foreignKey: 'rolId', as: 'rol' });
-    Rol.hasMany(UsuarioRol, { foreignKey: 'rolId' });
+    // --- Rol <-> Permiso (N:M) via RolPermiso ---
+    Rol.belongsToMany(Permiso, {
+      through: RolPermiso,
+      foreignKey: 'rolId',
+      otherKey: 'permisoId',
+      as: 'permisos',
+      onDelete: 'CASCADE',
+    });
+    Permiso.belongsToMany(Rol, {
+      through: RolPermiso,
+      foreignKey: 'permisoId',
+      otherKey: 'rolId',
+      as: 'roles',
+      onDelete: 'CASCADE',
+    });
 
-    Rol.belongsToMany(Permiso, { through: RolPermiso, foreignKey: 'rolId', as: 'Permisos' });
-    Permiso.belongsToMany(Rol, { through: RolPermiso, foreignKey: 'permisoId' });
-
-    RolPermiso.belongsTo(Rol, { foreignKey: 'rolId', as: 'rol' });
-    RolPermiso.belongsTo(Permiso, { foreignKey: 'permisoId', as: 'permiso' });
-
-
+    // (Opcional) Relaciones 1:N para facilitar includes
+    RolPermiso.belongsTo(Rol, {
+      foreignKey: 'rolId',
+      as: 'rol',
+    });
+    RolPermiso.belongsTo(Permiso, {
+      foreignKey: 'permisoId',
+      as: 'permiso',
+    });
   }
 
   get sequelize() {

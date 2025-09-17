@@ -1,37 +1,43 @@
 const { Model, DataTypes } = require('sequelize');
 
 class UsuarioRol extends Model {
-    //Getters
-    get UsuarioRol() {
-        return `${this.usuarioId} - ${this.rolId}`;
-    }
-    //Setters
-    set UsuarioId(newUsuarioId) {
-        this.usuarioId = newUsuarioId;
-    }
-    set RolId(newRolId) {
-        this.rolId = newRolId;
-    }
-    
+  get UsuarioRol() {
+    return `${this.getDataValue('usuarioId')} - ${this.getDataValue('rolId')}`;
+  }
+  set UsuarioId(newUsuarioId) {
+    this.setDataValue('usuarioId', newUsuarioId);
+  }
+  set RolId(newRolId) {
+    this.setDataValue('rolId', newRolId);
+  }
 }
 
 module.exports = (sequelize) => {
   UsuarioRol.init(
     {
       usuarioId: {
-        type: DataTypes.INTEGER,
-        references: { model: 'usuarios', key: 'id' }
+        type: DataTypes.STRING(36),        
+        allowNull: false,
+        primaryKey: true,               
+        references: { model: 'USUARIOS', key: 'ID' },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       rolId: {
-        type: DataTypes.INTEGER,
-        references: { model: 'roles', key: 'id' }
-      }
+        type: DataTypes.BIGINT,             
+        allowNull: false,
+        primaryKey: true,                
+        references: { model: 'ROLES', key: 'ID' },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+      },
     },
     {
       sequelize,
-      modelName: 'usuario_rol',
-      tableName: 'usuario_rol',
-      timestamps: true
+      modelName: 'UsuarioRol',
+      tableName: 'USUARIO_ROL',         
+      timestamps: true,
+      underscored: true,                   
     }
   );
 

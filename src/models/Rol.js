@@ -1,30 +1,44 @@
-const { Model, DataTypes } = require('sequelize');
+const { Model, DataTypes, Sequelize } = require('sequelize');
 
 class Rol extends Model {
-    //Getters
-    get Nombre() {
-        return this.nombre;
-    }
-    //Setters
-    set Nombre(newNombre) {
-        this.nombre = newNombre;
-    }
+  // Getters
+  get Nombre() {
+    return this.getDataValue('nombre');
+  }
+  // Setters
+  set Nombre(newNombre) {
+    this.setDataValue('nombre', newNombre);
+  }
 }
 
 module.exports = (sequelize) => {
   Rol.init(
     {
-      nombre: {
-        type: DataTypes.STRING,
+      id: {
+        type: DataTypes.BIGINT,      
+        primaryKey: true,
         allowNull: false,
-        unique: true
-      }
+        autoIncrement: true,         
+      },
+      nombre: {
+        type: DataTypes.STRING(100), 
+        allowNull: false,
+        unique: true,
+        validate: {
+          notEmpty: true,
+          len: [1, 100],
+        },
+      },
     },
     {
       sequelize,
-      modelName: 'rol',
-      tableName: 'roles',
-      timestamps: true
+      modelName: 'Rol',       
+      tableName: 'ROLES',     
+      timestamps: true,       
+      underscored: true,      
+      indexes: [
+        { unique: true, fields: ['nombre'] },
+      ],
     }
   );
 

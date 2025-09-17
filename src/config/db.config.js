@@ -1,13 +1,21 @@
-const {HOST, USER,PASSWORD,DB,DB_PORT}= require('./config.js'); 
+const { HOST, USER, PASSWORD, DB, DB_PORT } = require('./config.js');
+
 class DBConfig {
   constructor() {
-    this.HOST = HOST
+    this.HOST = HOST;          
+    this.USER = USER;          
+    this.PASSWORD = PASSWORD;  
+    this.DB = DB;              
+    this.PORT = DB_PORT || 1521;
 
-    this.USER = USER
-    this.PASSWORD = PASSWORD
-    this.DB = DB
-    this.PORT = DB_PORT
-    this.dialect = "postgres"
+
+    this.dialect = "oracle";
+
+
+    this.dialectOptions = {
+      connectString: `${this.HOST}:${this.PORT}/${this.DB}`, 
+    };
+
     this.pool = {
       max: 5,
       min: 0,
@@ -18,12 +26,10 @@ class DBConfig {
 
   getConfig() {
     return {
-      HOST: this.HOST,
-      USER: this.USER,
-      PASSWORD: this.PASSWORD,
-      DB: this.DB,
-      PORT: this.PORT,
+      username: this.USER,
+      password: this.PASSWORD,
       dialect: this.dialect,
+      dialectOptions: this.dialectOptions,
       pool: this.pool
     };
   }

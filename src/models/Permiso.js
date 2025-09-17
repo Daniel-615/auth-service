@@ -1,30 +1,42 @@
 const { Model, DataTypes } = require('sequelize');
 
 class Permiso extends Model {
-    //Getters
-    get Nombre() {
-        return this.nombre;
-    }
-    //Setters
-    set Nombre(newNombre) {
-        this.nombre = newNombre;
-    }
+  get Nombre() {
+    return this.getDataValue('nombre');
+  }
+  set Nombre(newNombre) {
+    this.setDataValue('nombre', newNombre);
+  }
 }
 
 module.exports = (sequelize) => {
   Permiso.init(
     {
-      nombre: {
-        type: DataTypes.STRING,
+      id: {
+        type: DataTypes.BIGINT,        
+        primaryKey: true,
         allowNull: false,
-        unique: true
-      }
+        autoIncrement: true           
+      },
+      nombre: {
+        type: DataTypes.STRING(100),   
+        allowNull: false,
+        unique: true,
+        validate: {
+          notEmpty: true,
+          len: [1, 100],
+        },
+      },
     },
     {
       sequelize,
-      modelName: 'permiso',
-      tableName: 'permisos',
-      timestamps: true
+      modelName: 'Permiso',
+      tableName: 'PERMISOS',   
+      timestamps: true,       
+      underscored: true,       
+      indexes: [
+        { unique: true, fields: ['nombre'] },
+      ],
     }
   );
 

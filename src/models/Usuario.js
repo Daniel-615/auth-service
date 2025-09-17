@@ -1,86 +1,85 @@
 const { Model, DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
 const { SALT_ROUNDS } = require('../config/config');
+
 class Usuario extends Model {
-    //Getters
-    get FullName() {
-        return `${this.nombre} ${this.apellido}`;
-    }
-    get Status(){
-        return `${this.status ? 'Activo' : 'Inactivo'}`;
-    }
-    get Email(){
-        return this.email;
-    }
-    async isValid(password, passwordHash){
-      const value= await bcrypt.compare(password, passwordHash);
-      return value;
-    }
-    //Setters
-    set Password(newPassword) {
-        const hashedPassword = bcrypt.hashSync(newPassword, SALT_ROUNDS);
-        this.password = hashedPassword;
-        console.log(`Contraseña actualizada para el usuario ${this.FullName}`);
-    }
-    
-    set Email(newEmail){
-        this.email=newEmail;
-    }
-    set Status(newStatus) {
-        this.status = newStatus;
-    }
-    set Nombre(newNombre) {
-        this.nombre = newNombre;
-    }
-    set Apellido(newApellido) {
-        this.apellido = newApellido;
-    }
-    
-   
+  // Getters
+  get FullName() {
+    return `${this.getDataValue('nombre')} ${this.getDataValue('apellido')}`;
+  }
+
+  get Status() {
+    return this.getDataValue('status') ? 'Activo' : 'Inactivo';
+  }
+
+  async isValid(password) {
+    return bcrypt.compare(password, this.getDataValue('password'));
+  }
 }
 
 module.exports = (sequelize) => {
   Usuario.init(
     {
+      id: {
+        type: DataTypes.STRING(36),         
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
       nombre: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.STRING(100),          
+        allowNull: false,
       },
       apellido: {
-        type: DataTypes.STRING
+        type: DataTypes.STRING(100),
+        allowNull: true,
       },
       email: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(150),
         allowNull: false,
-        unique: true
+        unique: true,
+        validate: { isEmail: true },
       },
       password: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.STRING(255),
+        allowNull: false,
       },
       status: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true
+        type: DataTypes.INTEGER,              
+        defaultValue: 1,                     
+        get() {
+          return this.getDataValue('status') === 1;
+        },
+        set(value) {
+          this.setDataValue('status', value ? 1 : 0);
+        },
       },
-      id:{
-        type:DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true
-      },
-      refreshToken:{
-        type: DataTypes.TEXT,
-        allowNull: true
+      refreshToken: {
+        type: DataTypes.CLOB,                 
+        allowNull: true,
       },
       resetToken: {
-        type: DataTypes.STRING,
-        allowNull: true
-      }
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
     },
     {
       sequelize,
-      modelName: 'usuario',
-      tableName: 'usuarios',
-      timestamps: true
+      modelName: 'Usuario',
+      tableName: 'USUARIOS',                 
+      timestamps: true,
+      underscored: true,                      
+      hooks: {
+        beforeCreate: async (usuario) => {
+          if (usuario.password) {
+            usuario.password = await bcrypt.hash(usuario.password, SALT_ROUNDS);
+          }
+        },
+        beforeUpdate: async (usuario) => {
+          if (usuario.changed('password')) {
+            usuario.password = await bcrypt.hash(usuario.password, SALT_ROUNDS);
+          }
+        },
+      },
     }
   );
 
