@@ -20,7 +20,6 @@ class Usuario extends Model {
     set Password(newPassword) {
         const hashedPassword = bcrypt.hashSync(newPassword, SALT_ROUNDS);
         this.password = hashedPassword;
-        console.log(`Contraseña actualizada para el usuario ${this.FullName}`);
     }
     
     set Email(newEmail){

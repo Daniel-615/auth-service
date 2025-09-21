@@ -115,7 +115,7 @@ class UsuarioController {
         include: [
           {
             model: db.getModel("Permiso"),
-            as: "Permisos"  // usa el alias correcto
+            as: "Permisos"
           }
         ]
       }); 
@@ -322,7 +322,7 @@ async findAllActivos(req, res) {
         include: [
           {
             model: db.getModel("Permiso"),
-            as: "Permisos"  // usa el alias correcto
+            as: "Permisos" 
           }
         ]
       }); 
