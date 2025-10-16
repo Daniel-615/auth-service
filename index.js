@@ -2,7 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { PORT, FRONTEND_URL } = require('./src/config/config.js');
+const { PORT, BACKEND_URL } = require('./src/config/config.js');
 const db = require('./src/models');
 const cookieParser = require('cookie-parser');
 const passport = require('./src/middleware/oauth2.js');
@@ -35,9 +35,12 @@ class Server {
 
   configureMiddlewares() {
     this.app.use(cors({
-      origin: FRONTEND_URL,
+      origin: BACKEND_URL,
       credentials: true,
-    }));
+      methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+      exposedHeaders: ["Set-Cookie"]
+    }));  
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
   }
