@@ -9,7 +9,7 @@ passport.use(
   new GoogleStrategy({
       clientID: OAUTH2_CLIENT_ID,
       clientSecret: OAUTH2_CLIENT_SECRET,
-      callbackURL: `${CALL_BACK_URL}/auth-service/usuario/auth/google/callback`
+      callbackURL: `${CALL_BACK_URL.replace(/\/+$/, "")}/api-gateway/usuario/auth/google/callback`,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
